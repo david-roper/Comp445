@@ -4,15 +4,15 @@ import sys
 
 
 
-def run_client(request,url, data,infile,outfile,header,verbose, host,port):
+def run_client(request,url, data,infile,outfile,header,verbose):
     conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
     try:
-
-        
         print("connected")
         if(request == "get"):
             print("this is a get request")
+        elif(request == "post"):
+            print("this is a post request")
             
         print(url)
         host = 'httpbin.org'
@@ -37,8 +37,8 @@ def run_client(request,url, data,infile,outfile,header,verbose, host,port):
         conn.close()
 
 
-# Usage: python a1client.py --host host --port port
-# example: python a1client.py --host httpbin.org --port 80
+# Usage: python httpc.py --host host --port port
+# example: python httpc.py --host httpbin.org --port 80
 # parser = argparse.ArgumentParser()
 # parser.add_argument("--get", help="""usage: httpc get [-v] [-h key:value] URL 
 # Get executes a HTTP GET request for a given URL.\n 
@@ -57,4 +57,4 @@ parser.add_argument("--host", help="server host", default="localhost")
 parser.add_argument("--port", help="server port", type=int, default=8007)
 args = parser.parse_args()
 print(args)
-run_client(args.request,args.url,args.data,args.infile,args.outfile,args.headers,args.verbose,args.host, args.port)
+run_client(args.request,args.url,args.data,args.infile,args.outfile,args.headers,args.verbose)
