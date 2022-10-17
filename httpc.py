@@ -62,6 +62,10 @@ def run_client(
     if not url:
         print('Please specify a url.')
         return
+    if '\'' in url or '\"' in url or '‘' in url or '’' in url:
+        filter_chars = ['\'', '\"', '‘', '’']
+        url = ''.join(letter for letter in url if letter not in filter_chars)
+        
     conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
     try:
