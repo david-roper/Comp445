@@ -92,10 +92,7 @@ def run_client(
             line += f'\n\n{data}\n\n'
         # add a newline at the end
         line += '\n'
-        if verbose:
-            print('**********************REQUEST**********************')
-            print(line)
-            print('***************************************************')
+
         
         request = line.encode("utf-8")
         conn.sendall(request)
