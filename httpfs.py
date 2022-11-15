@@ -7,6 +7,7 @@ import re
 from urllib.parse import urlparse, parse_qs
 from json import dumps
 
+desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop/Comp445/data')
 
 def run_server(host, port):
     listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -47,7 +48,7 @@ def handle_client(conn, addr):
 
 parser = argparse.ArgumentParser()
 verbose_option = {'dest':'verbose', 'action':'store_true', 'help':'prints verbose output', 'default':False}
-directory_option = {'dest':'dir', 'action':'store_true', 'help':'prints verbose output', 'default':'/c/Users/david/Desktop'}
+directory_option = {'dest':'dir', 'action':'store_true', 'help':'prints verbose output', 'default':desktop}
 parser.add_argument("--port", help="echo server port", type=int, default=8080)
 parser.add_argument("-v", **verbose_option)
 parser.add_argument("-d", **directory_option)
