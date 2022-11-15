@@ -5,7 +5,7 @@ import re
 from urllib.parse import urlparse, parse_qs
 from json import dumps
 
-#Code created by David Roper (40131739) and Gianfranco Dumoulin (40097768)
+#Code created by David Roper (40131739) and Gianfranco Dumoulin (40097768) 
 
 HELP_GET = """usage: httpc get [-v] [-h key:value] URL 
 Get executes a HTTP GET request for a given URL. 
@@ -105,7 +105,7 @@ def run_client(
                 break
             response = response + chunk
        
-        decoded_resp = response.decode("utf-8")
+            decoded_resp = response.decode("utf-8")
         if verbose:
             sys.stdout.write("Output: \n" + decoded_resp)
         else:
