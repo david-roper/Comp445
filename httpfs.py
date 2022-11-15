@@ -33,6 +33,7 @@ def handle_client(conn, addr):
                 decodedData = decodedData + '\r\n\r\n'
                 sys.stdout.write(decodedData)
                 decodedData = decodedData.encode('utf-8')
+                os.path("")
                 break
         conn.sendall(decodedData)
         #check in os system for data
@@ -42,8 +43,14 @@ def handle_client(conn, addr):
         conn.close()
 
 
-# Usage python3 httpcs.py --port 8080 [--port port-number]
+# Usage python3 httpfs.py --port 8080 [--port port-number]
+
 parser = argparse.ArgumentParser()
+verbose_option = {'dest':'verbose', 'action':'store_true', 'help':'prints verbose output', 'default':False}
+directory_option = {'dest':'dir', 'action':'store_true', 'help':'prints verbose output', 'default':'/c/Users/david/Desktop'}
 parser.add_argument("--port", help="echo server port", type=int, default=8080)
+parser.add_argument("-v", **verbose_option)
+parser.add_argument("-d", **directory_option)
+
 args = parser.parse_args()
 run_server('', args.port)
