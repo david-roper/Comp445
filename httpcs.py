@@ -20,9 +20,10 @@ def handle_client(conn, addr):
     print ('New client from', addr)
     try:
         while True:
-            data = conn.recv(1024)
+            data = conn.recv(4024)
             if not data:
                 break
+            
             conn.sendall(data)
     finally:
         conn.close()
@@ -30,6 +31,6 @@ def handle_client(conn, addr):
 
 # Usage python httpcs.py [--port port-number]
 parser = argparse.ArgumentParser()
-parser.add_argument("--port", help="echo server port", type=int, default=8007)
+parser.add_argument("--port", help="echo server port", type=int, default=8080)
 args = parser.parse_args()
 run_server('', args.port)
