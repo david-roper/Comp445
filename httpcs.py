@@ -28,7 +28,7 @@ def handle_client(conn, addr):
         conn.close()
 
 
-# Usage python echoserver.py [--port port-number]
+# Usage python httpcs.py [--port port-number]
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", help="echo server port", type=int, default=8007)
 args = parser.parse_args()
