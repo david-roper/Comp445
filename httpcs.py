@@ -32,7 +32,7 @@ def handle_client(conn, addr):
                 decodedData = data.decode('utf-8')
                 decodedData = decodedData + '\r\n\r\n'
                 sys.stdout.write(decodedData)
-                #decodedData - decodedData.encode('utf-8')
+                decodedData = decodedData.encode('utf-8')
                 break
         conn.sendall(decodedData)
         #check in os system for data
