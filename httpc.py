@@ -7,6 +7,8 @@ from json import dumps
 
 #Code created by David Roper (40131739) and Gianfranco Dumoulin (40097768) 
 
+#server test python3 get httpc.py http://localhost --port 8080
+
 HELP_GET = """usage: httpc get [-v] [-h key:value] URL 
 Get executes a HTTP GET request for a given URL. 
  -v Prints the detail of the response such as protocol, status, and headers. 

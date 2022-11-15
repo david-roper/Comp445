@@ -1,6 +1,11 @@
 import socket
 import threading
 import argparse
+import os
+import sys
+import re
+from urllib.parse import urlparse, parse_qs
+from json import dumps
 
 
 def run_server(host, port):
@@ -8,7 +13,7 @@ def run_server(host, port):
     try:
         listener.bind((host, port))
         listener.listen(5)
-        print('Echo server is listening at', port)
+        print('httpcs server is listening at', port)
         while True:
             conn, addr = listener.accept()
             threading.Thread(target=handle_client, args=(conn, addr)).start()
@@ -23,13 +28,21 @@ def handle_client(conn, addr):
             data = conn.recv(4024)
             if not data:
                 break
-            
-            conn.sendall(data)
+            elif data:
+                decodedData = data.decode('utf-8')
+                decodedData = decodedData + '\r\n\r\n'
+                sys.stdout.write(decodedData)
+                #decodedData - decodedData.encode('utf-8')
+                break
+        conn.sendall(decodedData)
+        #check in os system for data
+
+
     finally:
         conn.close()
 
 
-# Usage python httpcs.py [--port port-number]
+# Usage python3 httpcs.py --port 8080 [--port port-number]
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", help="echo server port", type=int, default=8080)
 args = parser.parse_args()
