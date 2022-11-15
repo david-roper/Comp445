@@ -62,6 +62,10 @@ def run_client(
     if not url:
         print('Please specify a url.')
         return
+    if '\'' in url or '\"' in url or '‘' in url or '’' in url:
+        filter_chars = ['\'', '\"', '‘', '’']
+        url = ''.join(letter for letter in url if letter not in filter_chars)
+        
     conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
     try:
@@ -88,10 +92,7 @@ def run_client(
             line += f'\n\n{data}\n\n'
         # add a newline at the end
         line += '\n'
-        if verbose:
-            print('**********************REQUEST**********************')
-            print(line)
-            print('***************************************************')
+
         
         request = line.encode("utf-8")
         conn.sendall(request)
