@@ -10,7 +10,8 @@ def search_data_dir(dir: str, target_file: str = ""):
         target_file = target_file.replace('../', '')
 
     if not target_file:
-        return os.listdir(f'{os.getcwd()}/data')
+        fileList = '\n'.join(os.listdir(f'{os.getcwd()}/{dir}/{target_file}'))
+        return fileList
     try:
         with open(f"{os.getcwd()}/{dir}{target_file}", 'r') as file_to_read:
             return file_to_read.read()
