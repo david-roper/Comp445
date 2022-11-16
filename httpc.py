@@ -112,6 +112,7 @@ def run_client(
         if verbose:
             sys.stdout.write("Output: \n" + decoded_resp)
         else:
+            sys.stdout.write("\n" + decoded_resp)
             decoded_resp = decoded_resp.split('\r\n\r\n')[1]
             sys.stdout.write("\n" + decoded_resp)
         if outfile:
