@@ -4,6 +4,7 @@ import sys
 import re
 from urllib.parse import urlparse, parse_qs
 from json import dumps
+from packet import Packet
 
 #Code created by David Roper (40131739) and Gianfranco Dumoulin (40097768) 
 
