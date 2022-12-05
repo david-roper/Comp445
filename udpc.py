@@ -11,6 +11,8 @@ from packet import Packet
 
 #server test python3 udpc.py get http://localhost --port 8080
 
+#./router --port=3000 --drop-rate=0.2 --max-delay=10ms --seed=1
+
 HELP_GET = """usage: httpc get [-v] [-h key:value] URL 
 Get executes a HTTP GET request for a given URL. 
  -v Prints the detail of the response such as protocol, status, and headers. 
