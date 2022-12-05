@@ -7,6 +7,7 @@ import re
 from urllib.parse import urlparse, parse_qs
 from json import dumps
 from helpers import search_data_dir, edit_data
+from packet import Packet
 
 #Code created by David Roper (40131739) and Gianfranco Dumoulin (40097768) 
 
@@ -52,27 +53,44 @@ def parse_http_one_request(data) -> dict:
     return decodedDataList
 
 def run_server(host, port,verbose,dir):
-    listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    conn = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        listener.bind((host, port))
-        if verbose:
-            print(f'DEBUG: Server running')
-        listener.listen(5)
-        if verbose:
-            print(f'DEBUG: Server listening on port {port}...')
+        conn.bind(('', port))
+        print(f'DEBUG: Server listening on port {port}...')
         while True:
-            conn, addr = listener.accept()
-            threading.Thread(target=handle_client, args=(conn, addr,verbose,dir)).start()
+            data, sender = conn.recvfrom(4096)
+            threading.Thread(target=handle_client, args=(conn, verbose,dir,data, sender)).start()
     finally:
-        listener.close()
+        conn.close()
 
-def handle_client(conn, addr, verbose, dir):
+
+    # listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # try:
+    #     listener.bind((host, port))
+    #     if verbose:
+    #         print(f'DEBUG: Server running')
+    #     listener.listen(5)
+    #     if verbose:
+    #         print(f'DEBUG: Server listening on port {port}...')
+    #     while True:
+    #         conn, addr = listener.accept()
+    #         threading.Thread(target=handle_client, args=(conn, addr,verbose,dir)).start()
+    # finally:
+    #     listener.close()
+
+def handle_client(conn, verbose, dir,data,sender):
     if verbose:
-        print(f'DEBUG: New client from {addr}')
+        print(f'DEBUG: New client from {sender}')
         print(f'DEBUG: directory of server set to \"{dir}\"')
     try:
         while True:
-            data = conn.recv(4024)
+            p = Packet.from_bytes(data)
+            print("Router: ", sender)
+            print("Packet: ", p)
+            print("Payload: ", p.payload.decode("utf-8"))
+
+            data = p.payload
+
             if verbose:
                 print(F'DEBUG: Receiving data...')
             if not data:
@@ -120,12 +138,15 @@ def handle_client(conn, addr, verbose, dir):
                 
                 decodedData = decodedData + '\r\n\r\n'
                 decodedData = decodedData.encode('utf-8')
+                p.payload = decodedData
                 #sys.stdout.write(decodedData)
                 #os.path("")
                 break
-        conn.sendall(decodedData) #has to send an encoded in utf-8 string
+        conn.sendto(p.to_bytes(), sender)
+        # conn.sendall(decodedData) #has to send an encoded in utf-8 string
         #check in os system for data
-
+    except Exception as e:
+        print("Error: ", e)
 
     finally:
         conn.close()

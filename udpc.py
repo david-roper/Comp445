@@ -1,5 +1,6 @@
 import socket
 import argparse
+import ipaddress
 import sys
 import re
 from urllib.parse import urlparse, parse_qs
@@ -68,14 +69,25 @@ def run_client(
     if '\'' in url or '\"' in url or '‘' in url or '’' in url:
         filter_chars = ['\'', '\"', '‘', '’']
         url = ''.join(letter for letter in url if letter not in filter_chars)
-        
-    conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    router_addr = 'localhost'
+    router_port = 3000
+
+    server_addr = 'localhost'
+    server_port = 8007
+    
+    peer_ip = ipaddress.ip_address(socket.gethostbyname(server_addr))
+    conn = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    timeout = 5
     
     try:
         parsed_url = urlparse(url)
         host = parsed_url.hostname
         path = parsed_url.path
         query_params = parsed_url.query
+        #router host and port
+      
+
         conn.connect((host, port))
 
         # Build request string
@@ -98,18 +110,36 @@ def run_client(
 
         
         request = line.encode("utf-8")
-        conn.sendall(request)
+
+        p = Packet(packet_type=0,
+                   seq_num=1,
+                   peer_ip_addr=peer_ip,
+                   peer_port=server_port,
+                   payload=request)
+        conn.sendto(p.to_bytes(), (router_addr, router_port))
+
+        print('Send "{}" to router'.format(request.decode("utf-8")))
+
+
+        # Try to receive a response within timeout
+        conn.settimeout(timeout)
+        print('Waiting for a response')
+        response, sender = conn.recvfrom(4096)
+        p = Packet.from_bytes(response)
+        print('Router: ', sender)
+        print('Packet: ', p)
+        print('Payload: ' + p.payload.decode("utf-8"))
         
         # MSG_WAITALL waits for full request or error
-        response = b""
+        # response = b""
         
-        while True:
-            chunk = conn.recv(4096)
-            if len(chunk) == 0:     # No more data received, quitting
-                break
-            response = response + chunk
+        # while True:
+        #     chunk = conn.recv(4096)
+        #     if len(chunk) == 0:     # No more data received, quitting
+        #         break
+        #     response = response + chunk
        
-        decoded_resp = response.decode("utf-8")
+        decoded_resp = p.payload.decode("utf-8")
         if verbose:
             sys.stdout.write("Output: \n" + decoded_resp)
         else:
@@ -119,6 +149,8 @@ def run_client(
         if outfile:
             with open(outfile, 'w') as ftw:
                 ftw.write(decoded_resp)
+    except socket.timeout:
+        print('No response after {}s'.format(timeout))
     finally:
         conn.close()
 
