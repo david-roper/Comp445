@@ -76,86 +76,166 @@ def run_client(
     router_port = 3000
 
     server_addr = 'localhost'
-    server_port = 8007
+    server_port = 8080
+
     
-    peer_ip = ipaddress.ip_address(socket.gethostbyname(server_addr))
-    conn = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    timeout = 5
-    
-    try:
-        parsed_url = urlparse(url)
-        host = parsed_url.hostname
-        path = parsed_url.path
-        query_params = parsed_url.query
-        #router host and port
-      
+    peer_ip = ipaddress.ip_address(socket.gethostbyname('localhost'))
 
-        conn.connect((host, port))
+    #handshake 1
 
-        # Build request string
-        line = f'{request.upper()} {path}'
-        if query_params:
-            line += f'?{parsed_url.query}'
-        line += ' HTTP/1.0\n'
-        line += f'Host: {host}\n'
-        # Add headers
-        if headers:
-            for header in headers:
-                line += f'{header}\n'
-        # if request is of type get, don't send payload
-        # because it vioaltes http specifications
-        if request.lower() != 'get' and data:
-            line += f'Content-Length: {len(data)}'
-            line += f'\n\n{data}\n\n'
-        # add a newline at the end
-        line += '\n'
+    msg = "Hi server"
 
-        
-        request = line.encode("utf-8")
-
-        p = Packet(packet_type=0,
-                   seq_num=1,
+    h1 = Packet(packet_type=2,
+                   seq_num=2,
                    peer_ip_addr=peer_ip,
                    peer_port=server_port,
-                   payload=request)
-        conn.sendto(p.to_bytes(), (router_addr, router_port))
+                   payload=msg.encode("utf-8"))
 
-        print('Send "{}" to router'.format(request.decode("utf-8")))
+    #handshake 2
+    msg2 = "Ack msg to Server"
+
+    h2 = Packet(packet_type=4,
+                   seq_num=4,
+                   peer_ip_addr=peer_ip,
+                   peer_port=server_port,
+                   payload=msg2.encode("utf-8"))
 
 
-        # Try to receive a response within timeout
-        conn.settimeout(timeout)
+    #final ack
+    msg3 = "Ack to server end connection"
+    final = Packet(packet_type=5,
+                   seq_num=99,
+                   peer_ip_addr=peer_ip,
+                   peer_port=server_port,
+                   payload=msg3.encode("utf-8"))
+
+    conn = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    timeout = 5
+
+    eSeq = 0
+    sentSuccess = True
+
+    
+    
+    parsed_url = urlparse(url)
+    host = parsed_url.hostname
+    path = parsed_url.path
+    query_params = parsed_url.query
+    #router host and port
+    #conn.connect((host, port))
+
+    # Build request string
+    line = f'{request.upper()} {path}'
+    if query_params:
+        line += f'?{parsed_url.query}'
+    line += ' HTTP/1.0\n'
+    line += f'Host: {host}\n'
+    # Add headers
+    if headers:
+        for header in headers:
+            line += f'{header}\n'
+    # if request is of type get, don't send payload
+    # because it vioaltes http specifications
+    if request.lower() != 'get' and data:
+        line += f'Content-Length: {len(data)}'
+        line += f'\n\n{data}\n\n'
+    # add a newline at the end
+    line += '\n'
+
+    
+    request = line.encode("utf-8")
+
+    print(request.decode("utf-8"))
+
+    p = Packet(packet_type=0,
+                seq_num=0,
+                peer_ip_addr=peer_ip,
+                peer_port=server_port,
+                payload=request)
+    
+    packetList = [h1,p,final]
+
+    
+
+    for pack in packetList:
+        sentSuccess = True
+        try:
+            if pack.packet_type == 2: #Expects syn-ack
+                eSeq = 3
+            
+            elif pack.packet_type == 0: #Expects ack with same seq_num
+                eSeq = pack.seq_num
+            
+            elif pack.packet_type == 5: #Expects fin ack
+                eSeq = 99
+            conn.sendto(pack.to_bytes(), ("localhost",3000))
+            print('Send "{}" to router'.format(pack.payload.decode("utf-8")))
+            conn.settimeout(timeout)
+
+            while True:
+                response, sender = conn.recvfrom(4096)
+                recP = Packet.from_bytes(response)
+                print('Router: ', sender)
+                print('Packet: ', recP)
+                print('Payload: ' + recP.payload.decode("utf-8"))
+                if response:
+                    if recP.seq_num == eSeq:
+                        if recP.packet_type == 1:
+                            msg = "ACK packet"
+                            rPac =  Packet(packet_type=4,
+                            seq_num=(recP.seq_num+1)%2,
+                            peer_ip_addr=peer_ip,
+                            peer_port=server_port,
+                            payload=msg.encode("utf-8"))
+                            conn.sendto(rPac.to_bytes(), ("localhost",3000))
+                        elif recP.packet_type == 3:
+                            conn.sendto(h2.to_bytes(), ("localhost",3000))
+                        break
+                    elif recP.seq_num == 0 or recP.packet_type == 1:
+                        msg = "ACK packet"
+                        rPac =  Packet(packet_type=4,
+                        seq_num=recP.seq_num,
+                        peer_ip_addr=peer_ip,
+                        peer_port=server_port,
+                        payload=msg.encode("utf-8"))
+                        conn.sendto(rPac.to_bytes(), ("localhost",3000))     
+        except socket.timeout:
+                sentSuccess = False
+                print("trying to send", pack)
+
+        
         print('Waiting for a response')
-        response, sender = conn.recvfrom(4096)
-        p = Packet.from_bytes(response)
-        print('Router: ', sender)
-        print('Packet: ', p)
-        print('Payload: ' + p.payload.decode("utf-8"))
+            
+            
+        if sentSuccess:
+            print('recieved response')
+            response, sender = conn.recvfrom(4096)
+            recP = Packet.from_bytes(response)
+            print('Router: ', sender)
+            print('Packet: ', recP)
+            print('Payload: ' + recP.payload.decode("utf-8"))
+            
+            # MSG_WAITALL waits for full request or error
+            # response = b""
+            
+            # while True:
+            #     chunk = conn.recv(4096)
+            #     if len(chunk) == 0:     # No more data received, quitting
+            #         break
+            #     response = response + chunk
         
-        # MSG_WAITALL waits for full request or error
-        # response = b""
-        
-        # while True:
-        #     chunk = conn.recv(4096)
-        #     if len(chunk) == 0:     # No more data received, quitting
-        #         break
-        #     response = response + chunk
-       
-        decoded_resp = p.payload.decode("utf-8")
-        if verbose:
-            sys.stdout.write("Output: \n" + decoded_resp)
-        else:
-            sys.stdout.write("\n" + decoded_resp)
-            decoded_resp = decoded_resp.split('\r\n\r\n')[1]
-            sys.stdout.write("\n" + decoded_resp)
-        if outfile:
-            with open(outfile, 'w') as ftw:
-                ftw.write(decoded_resp)
-    except socket.timeout:
-        print('No response after {}s'.format(timeout))
-    finally:
-        conn.close()
+            decoded_resp = recP.payload.decode("utf-8")
+            if verbose:
+                sys.stdout.write("Output: \n" + decoded_resp)
+            else:
+                sys.stdout.write("\n" + decoded_resp)
+                decoded_resp = decoded_resp.split('\r\n\r\n')[1]
+                sys.stdout.write("\n" + decoded_resp)
+            if outfile:
+                with open(outfile, 'w') as ftw:
+                    ftw.write(decoded_resp)
 
+    conn.close()
 
 
 parser = argparse.ArgumentParser(description='httpc is a curl like application that supports http get and post requests.', add_help=False)
