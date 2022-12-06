@@ -154,22 +154,23 @@ def run_client(
                 payload=request)
     
     packetList = [h1,p,final]
+    packNum = 0
 
     
 
-    for pack in packetList:
+    while packNum < len(packetList):
         sentSuccess = True
         try:
-            if pack.packet_type == 2: #Expects syn-ack
+            if packetList[packNum].packet_type == 2: #Expects syn-ack
                 eSeq = 3
             
-            elif pack.packet_type == 0: #Expects ack with same seq_num
-                eSeq = pack.seq_num
+            elif packetList[packNum].packet_type == 0: #Expects ack with same seq_num
+                eSeq = packetList[packNum].seq_num
             
-            elif pack.packet_type == 5: #Expects fin ack
+            elif packetList[packNum].packet_type == 5: #Expects fin ack
                 eSeq = 99
-            conn.sendto(pack.to_bytes(), ("localhost",3000))
-            print('Send "{}" to router'.format(pack.payload.decode("utf-8")))
+            conn.sendto(packetList[packNum].to_bytes(), ("localhost",3000))
+            print('Send "{}" to router'.format(packetList[packNum].payload.decode("utf-8")))
             conn.settimeout(timeout)
 
             while True:
@@ -201,7 +202,7 @@ def run_client(
                         conn.sendto(rPac.to_bytes(), ("localhost",3000))     
         except socket.timeout:
                 sentSuccess = False
-                print("trying to send", pack)
+                print("trying to send", packetList[packNum])
 
         
         print('Waiting for a response')
@@ -209,6 +210,7 @@ def run_client(
             
         if sentSuccess:
             print('recieved response')
+            packNum += 1
             response, sender = conn.recvfrom(4096)
             recP = Packet.from_bytes(response)
             print('Router: ', sender)
