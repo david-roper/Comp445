@@ -104,7 +104,7 @@ def run_client(
     #final ack
     msg3 = "Ack to server end connection"
     final = Packet(packet_type=5,
-                   seq_num=99,
+                   seq_num=69,
                    peer_ip_addr=peer_ip,
                    peer_port=server_port,
                    payload=msg3.encode("utf-8"))
@@ -145,7 +145,7 @@ def run_client(
     
     request = line.encode("utf-8")
 
-    print(request.decode("utf-8"))
+    #print(request.decode("utf-8"))
 
     p = Packet(packet_type=0,
                 seq_num=0,
@@ -161,14 +161,16 @@ def run_client(
     while packNum < len(packetList):
         sentSuccess = True
         try:
-            if packetList[packNum].packet_type == 2: #Expects syn-ack
+            if packetList[packNum].packet_type == 2: 
                 eSeq = 3
             
-            elif packetList[packNum].packet_type == 0: #Expects ack with same seq_num
+            elif packetList[packNum].packet_type == 0: 
+                
                 eSeq = packetList[packNum].seq_num
+                print("expected packet type 0 seq: ", eSeq)
             
-            elif packetList[packNum].packet_type == 5: #Expects fin ack
-                eSeq = 99
+            elif packetList[packNum].packet_type == 5: 
+                eSeq = 69
             conn.sendto(packetList[packNum].to_bytes(), ("localhost",3000))
             print('Send "{}" to router'.format(packetList[packNum].payload.decode("utf-8")))
             conn.settimeout(timeout)
@@ -180,26 +182,34 @@ def run_client(
                 print('Packet: ', recP)
                 print('Payload: ' + recP.payload.decode("utf-8"))
                 if response:
+                    print("Expect seq num: ",eSeq)
+                    print("Actual seq num: ", recP.seq_num)
                     if recP.seq_num == eSeq:
                         if recP.packet_type == 1:
                             msg = "ACK packet"
+
                             rPac =  Packet(packet_type=4,
                             seq_num=(recP.seq_num+1)%2,
                             peer_ip_addr=peer_ip,
                             peer_port=server_port,
                             payload=msg.encode("utf-8"))
+
                             conn.sendto(rPac.to_bytes(), ("localhost",3000))
+
                         elif recP.packet_type == 3:
+
                             conn.sendto(h2.to_bytes(), ("localhost",3000))
                         break
                     elif recP.seq_num == 0 or recP.packet_type == 1:
+
                         msg = "ACK packet"
                         rPac =  Packet(packet_type=4,
                         seq_num=recP.seq_num,
                         peer_ip_addr=peer_ip,
                         peer_port=server_port,
                         payload=msg.encode("utf-8"))
-                        conn.sendto(rPac.to_bytes(), ("localhost",3000))     
+                        conn.sendto(rPac.to_bytes(), ("localhost",3000)) 
+
         except socket.timeout:
                 sentSuccess = False
                 print("trying to send", packetList[packNum])
@@ -211,31 +221,36 @@ def run_client(
         if sentSuccess:
             print('recieved response')
             packNum += 1
-            response, sender = conn.recvfrom(4096)
-            recP = Packet.from_bytes(response)
-            print('Router: ', sender)
-            print('Packet: ', recP)
-            print('Payload: ' + recP.payload.decode("utf-8"))
+            try:
+                response, sender = conn.recvfrom(4096)
+                recP = Packet.from_bytes(response)
+                print('Router: ', sender)
+                print('Packet: ', recP.seq_num)
+                print('Payload: ' + recP.payload.decode("utf-8"))
+                
+                # MSG_WAITALL waits for full request or error
+                # response = b""
+                
+                # while True:
+                #     chunk = conn.recv(4096)
+                #     if len(chunk) == 0:     # No more data received, quitting
+                #         break
+                #     response = response + chunk
             
-            # MSG_WAITALL waits for full request or error
-            # response = b""
+                decoded_resp = recP.payload.decode("utf-8")
+                if verbose:
+                    sys.stdout.write("Output: \n" + decoded_resp)
+                else:
+                    sys.stdout.write("\n" + decoded_resp)
+                    decoded_resp = decoded_resp.split('\r\n\r\n')[1]
+                    sys.stdout.write("\n" + decoded_resp)
+                if outfile:
+                    with open(outfile, 'w') as ftw:
+                        ftw.write(decoded_resp)
+            except socket.timeout:
+                print()
             
-            # while True:
-            #     chunk = conn.recv(4096)
-            #     if len(chunk) == 0:     # No more data received, quitting
-            #         break
-            #     response = response + chunk
         
-            decoded_resp = recP.payload.decode("utf-8")
-            if verbose:
-                sys.stdout.write("Output: \n" + decoded_resp)
-            else:
-                sys.stdout.write("\n" + decoded_resp)
-                decoded_resp = decoded_resp.split('\r\n\r\n')[1]
-                sys.stdout.write("\n" + decoded_resp)
-            if outfile:
-                with open(outfile, 'w') as ftw:
-                    ftw.write(decoded_resp)
 
     conn.close()
 

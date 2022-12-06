@@ -55,16 +55,18 @@ def parse_http_one_request(data) -> dict:
 def run_server(host, port,verbose,dir):
     conn = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     conn.settimeout(5)
-    try:
-        conn.bind(('localhost', port))
-        print(f'DEBUG: Server listening on port {port}...')
-        while True:
-            data, sender = conn.recvfrom(1024)
-            threading.Thread(target=handle_client, args=(conn, verbose,dir,data, sender)).start()
-    except socket.timeout:
-        print("ERROR socket timeout")
-    finally:
-        conn.close()
+    conn.bind(('localhost', port))
+    while True:
+        try:
+            
+            print(f'DEBUG: Server listening on port {port}...')
+            while True:
+                data, sender = conn.recvfrom(1024)
+                threading.Thread(target=handle_client, args=(conn, verbose,dir,data, sender)).start()
+        except socket.timeout:
+            print("ERROR socket timeout")
+        finally:
+            conn.close()
 
 
     # listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -97,7 +99,7 @@ def handle_client(conn, verbose, dir,data,sender):
     if p.packet_type == 5:
         msg3 = "Ack to server end connection"
         final = Packet(packet_type=5,
-                   seq_num=99,
+                   seq_num=69,
                    peer_ip_addr=peerIp,
                    peer_port=serverPort,
                    payload=msg3.encode("utf-8"))
@@ -118,29 +120,32 @@ def handle_client(conn, verbose, dir,data,sender):
                 conn.sendto(curPack.to_bytes(),sender)
                 conn.settimeout(timeout)
                 while True:
+                    print("here")
                     Ack, router = conn.recvfrom(1024)
                     if Ack:
                         pAck = Packet.from_bytes(Ack)
                         if pAck.seq_num == eSeq:
-                            print("recieved packet: ", pAck)
+                            print("recieved packet: ",pAck)
                             handleAck = False
+                            
                             break
                         
-            except conn.timeout:
-                print("Connection time out")
+            except socket.timeout:
+                print("attempting to resend")
 
 
     try:
         while True:
             while True:
+                print("trying to receive more data")
                 try:
-                    data, sender = conn.recvfrom(1024)
-                    if data:
-                        p = Packet.from_bytes(data)
-                        if p.seq_num == 5:
+                    data2, sender = conn.recvfrom(1024)
+                    if data2:
+                        p = Packet.from_bytes(data2)
+                        if p.seq_num == 4:
                             msg3 = "Ack to server end connection"
                             final = Packet(packet_type=5,
-                            seq_num=99,
+                            seq_num=69,
                             peer_ip_addr=peerIp,
                             peer_port=serverPort,
                             payload=msg3.encode("utf-8"))
@@ -149,11 +154,12 @@ def handle_client(conn, verbose, dir,data,sender):
                             break
                         elif p.seq_num != 4:
                             break
-                except conn.timeout:
+                except socket.timeout:
+                    print("continue to recieve")
                     continue
             if endConn:
                 break  
-            p = Packet.from_bytes(data)
+            p = Packet.from_bytes(data2)
             print("Router: ", sender)
             print("Packet: ", p)
             print("Payload: ", p.payload.decode("utf-8"))
@@ -163,7 +169,8 @@ def handle_client(conn, verbose, dir,data,sender):
             if verbose:
                 print(F'DEBUG: Receiving data...')
             if not data:
-                break
+                print("No data recieved")
+                
             elif data:
                 decodedData = data.decode('utf-8')
                 if (verbose):
@@ -210,42 +217,44 @@ def handle_client(conn, verbose, dir,data,sender):
                 p.payload = decodedData
                 #sys.stdout.write(decodedData)
                 #os.path("")
-                break
-        curPack = Packet(packet_type=1,
-                           seq_num=p.seq_num,
-                           peer_ip_addr=peerIp,
-                           peer_port=serverPort,
-                           payload=p.payload)
-        eSeq = (curPack.seq_num+1)%2
+                
+            curPack = Packet(packet_type=1,
+                            seq_num=p.seq_num,
+                            peer_ip_addr=peerIp,
+                            peer_port=serverPort,
+                            payload=p.payload)
+            eSeq = (curPack.seq_num+1)%2
         
 
-        sendAck = True
-        while sendAck:
-            try:
-                conn.sendto(p.to_bytes(), sender)
-                conn.settimeout(timeout)
-                while True:
-                    dAck, sender = conn.recvfrom(1024)
-                    AckPack = Packet.from_bytes(dAck)
-                    if AckPack.seq_num == 5:
-                        msg3 = "Ack to server end connection"
-                        final = Packet(packet_type=5,
-                        seq_num=99,
-                        peer_ip_addr=peerIp,
-                        peer_port=serverPort,
-                        payload=msg3.encode("utf-8"))
-                        conn.sendto(final.to_bytes(),sender)
-                        endConn = True
-                        sendAck = False
-                        break
-                    elif AckPack.seq_num == eSeq:
-                        print("Data received from packet")
-                        sendAck = False
-                        break
+            sendAck = True
+            while sendAck:
+                try:
+                    conn.sendto(p.to_bytes(), sender)
+                    conn.settimeout(timeout)
+                    while True:
+                        dAck, sender = conn.recvfrom(1024)
+                        AckPack = Packet.from_bytes(dAck)
+                        if AckPack.seq_num == 5:
+                            msg3 = "Ack to server end connection"
+
+                            final = Packet(packet_type=5,
+                            seq_num=69,
+                            peer_ip_addr=peerIp,
+                            peer_port=serverPort,
+                            payload=msg3.encode("utf-8"))
+
+                            conn.sendto(final.to_bytes(),sender)
+                            endConn = True
+                            sendAck = False
+                            break
+                        elif AckPack.seq_num == eSeq:
+                            print("Data received from packet")
+                            sendAck = False
+                            break
 
 
-            except conn.timeout:
-                print("Connection timeout")
+                except socket.timeout:
+                    print("reconnecting")
         
         #conn.sendall(decodedData) #has to send an encoded in utf-8 string
         #check in os system for data
