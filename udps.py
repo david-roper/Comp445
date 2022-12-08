@@ -246,6 +246,7 @@ def handle_client(conn, verbose, dir,data,sender):
                             conn.sendto(final.to_bytes(),sender)
                             endConn = True
                             sendAck = False
+                            return
                             break
                         elif AckPack.seq_num == eSeq:
                             print("Data received from packet")
