@@ -18,6 +18,7 @@ from json import dumps
 
 #server test post
 #python3 httpc.py post http://localhost/jsonfile.json -h Content-Type:application/json --d '{"key0": 1}' --port 8080
+#python3 httpc.py post http://localhost/test.txt -h Content-Type:application/txt --d 'hi test' --port 8080
 
 
 HELP_GET = """usage: httpc get [-v] [-h key:value] URL 
