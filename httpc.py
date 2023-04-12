@@ -13,6 +13,11 @@ from json import dumps
 #server test python3 httpc.py get http://localhost --port 8080
 # python3 httpc.py get 'http://httpbin.org/get?course=networking&assignment=1'
 # python3 httpc.py get 'http://httpbin.org/status/418'
+# python3 httpc.py post http://httpbin.org/post  -h Content-Type:application/json --d '{"Assignment": 1}'
+
+#server test post
+#python3 httpc.py post http://localhost/jsonfile.json -h Content-Type:application/json --d '{"key0": 1}' --port 8080
+
 
 HELP_GET = """usage: httpc get [-v] [-h key:value] URL 
 Get executes a HTTP GET request for a given URL. 
