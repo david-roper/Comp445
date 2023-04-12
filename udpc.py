@@ -10,7 +10,10 @@ from packet import Packet
 #Code created by David Roper (40131739) and Gianfranco Dumoulin (40097768) 
 
 #server test python3 udpc.py get http://localhost --port 8080
-
+#run router as such
+#cd to source/router.go directory
+#run the following go command
+#go run router.go --port=3000 --drop-rate=0.2 --max-delay=10ms --seed=1
 #./router --port=3000 --drop-rate=0.2 --max-delay=10ms --seed=1
 
 HELP_GET = """usage: httpc get [-v] [-h key:value] URL 
