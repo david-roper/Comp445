@@ -14,6 +14,7 @@ from json import dumps
 # python3 httpc.py get 'http://httpbin.org/get?course=networking&assignment=1'
 # python3 httpc.py get 'http://httpbin.org/status/418'
 # python3 httpc.py post http://httpbin.org/post  -h Content-Type:application/json --d '{"Assignment": 1}'
+# python3 httpc.py get http://localhost/test.txt -h Content-Type:application/txt  --port 8080
 
 #server test post
 #python3 httpc.py post http://localhost/jsonfile.json -h Content-Type:application/json --d '{"key0": 1}' --port 8080
