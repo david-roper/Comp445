@@ -5,9 +5,14 @@ import re
 from urllib.parse import urlparse, parse_qs
 from json import dumps
 
-#Code created by David Roper (40131739) and Gianfranco Dumoulin (40097768) 
+#Code created by David Roper (40131739) and Gianfranco Dumoulin (40097768)
+
+#the following code is a simple http client which can make simple requests
+#running the code 
 
 #server test python3 httpc.py get http://localhost --port 8080
+# python3 httpc.py get 'http://httpbin.org/get?course=networking&assignment=1'
+# python3 httpc.py get 'http://httpbin.org/status/418'
 
 HELP_GET = """usage: httpc get [-v] [-h key:value] URL 
 Get executes a HTTP GET request for a given URL. 

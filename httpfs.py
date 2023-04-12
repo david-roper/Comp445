@@ -10,9 +10,16 @@ from helpers import search_data_dir, edit_data
 
 #Code created by David Roper (40131739) and Gianfranco Dumoulin (40097768) 
 
+#the following code is a file server which the can be communicated to by the httpc client.
+#the user can make get and post requests to the server and access the files
+#to run the server use the following command below
+
 # Usage python3 httpfs.py --port 8080 [--port port-number]
-desktop = os.path.join(os.environ['USERPROFILE'])
-desktop = desktop + '\Desktop\Comp445\data'
+#desktop = os.path.join(os.environ['USERPROFILE'])
+
+#desktop = desktop + '\Desktop\Comp445\data'
+# desktop = '\\Users\\DavidRoper\\Desktop\\Comp445\\data'
+
 
 def handle_get(path, dir):
     if path == '/':

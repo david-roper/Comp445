@@ -2,6 +2,9 @@ import os
 
 #Code created by David Roper (40131739) and Gianfranco Dumoulin (40097768) 
 #from helpers import edit_data, search_data_dir
+#helpers to parse the requests sent from the httpc client
+#if the request is invalid it can also send messages back for bad request
+#such as errors 404 and 400
 def search_data_dir(dir: str, target_file: str = ""):
 
     if '/../' in target_file:
@@ -10,6 +13,7 @@ def search_data_dir(dir: str, target_file: str = ""):
         target_file = target_file.replace('../', '')
 
     if not target_file:
+        print(os.getcwd())
         fileList = '\n'.join(os.listdir(f'{os.getcwd()}/{dir}/{target_file}'))
         return fileList
     try:
